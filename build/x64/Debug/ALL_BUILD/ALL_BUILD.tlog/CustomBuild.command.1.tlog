@@ -1,0 +1,10 @@
+^D:\0 - CODE\REPOS\GLVORONOI\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SD:/0 - Code/Repos/GlVoronoi" "-BD:/0 - Code/Repos/GlVoronoi/build" --check-stamp-file "D:/0 - Code/Repos/GlVoronoi/build/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

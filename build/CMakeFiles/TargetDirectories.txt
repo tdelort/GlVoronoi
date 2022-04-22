@@ -1,0 +1,13 @@
+D:/0 - Code/Repos/GlVoronoi/build/CMakeFiles/GlVoronoi.dir
+D:/0 - Code/Repos/GlVoronoi/build/CMakeFiles/INSTALL.dir
+D:/0 - Code/Repos/GlVoronoi/build/CMakeFiles/ALL_BUILD.dir
+D:/0 - Code/Repos/GlVoronoi/build/CMakeFiles/ZERO_CHECK.dir
+D:/0 - Code/Repos/GlVoronoi/build/libs/CMakeFiles/GLAD.dir
+D:/0 - Code/Repos/GlVoronoi/build/libs/CMakeFiles/IMGUI.dir
+D:/0 - Code/Repos/GlVoronoi/build/libs/CMakeFiles/INSTALL.dir
+D:/0 - Code/Repos/GlVoronoi/build/libs/glfw/CMakeFiles/uninstall.dir
+D:/0 - Code/Repos/GlVoronoi/build/libs/glfw/CMakeFiles/INSTALL.dir
+D:/0 - Code/Repos/GlVoronoi/build/libs/glfw/CMakeFiles/ALL_BUILD.dir
+D:/0 - Code/Repos/GlVoronoi/build/libs/glfw/src/CMakeFiles/glfw.dir
+D:/0 - Code/Repos/GlVoronoi/build/libs/glfw/src/CMakeFiles/update_mappings.dir
+D:/0 - Code/Repos/GlVoronoi/build/libs/glfw/src/CMakeFiles/INSTALL.dir
