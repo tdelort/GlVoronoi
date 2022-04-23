@@ -13,11 +13,12 @@
 
 // STD LIBS
 #include <iostream>
+#include <string>
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 800
 
-#define MAX_SEED_COUNT 128
+#define MAX_SEED_COUNT 128 // Change in shader too
 
 #define _DEBUG_SHADER
 
@@ -40,21 +41,63 @@ static const char* fragmentSource = R"glsl(
 
     in vec3 fragPos;
 
-    uniform vec2 u_resolution;
+    uniform int u_seedCount;
+    uniform vec2 u_seedsPosition[128];
+    uniform vec3 u_seedsColor[128];
+    uniform int u_distanceFunction;
 
 	out vec4 outColor;
+
+    float distanceFunction(vec2 a, vec2 b)
+    {
+        switch (u_distanceFunction)
+        {
+            case 0:
+                // euclidean
+                return distance(a, b);
+            case 1:
+                // manhattan
+                return abs(a.x - b.x) + abs(a.y - b.y);
+            case 2:
+                // chebyshev
+                return max(abs(a.x - b.x), abs(a.y - b.y));
+            case 3:
+            default:
+                return 0.0;
+        }
+    }
 
 	void main()
 	{
         vec2 uv = fragPos.xy * 0.5 + 0.5;
-        vec2 pixelCoord = uv * u_resolution;
-		outColor = vec4(pixelCoord / u_resolution, 0.0, 1.0);
+        int seedIndex = 0;
+        //bool edge = false;
+        float minDistance = distanceFunction(uv, u_seedsPosition[0]);
+        for (int i = 0; i < u_seedCount; i++)
+        {
+            vec2 seedUV = u_seedsPosition[i];
+            float newDistance = distanceFunction(uv, seedUV);
+            if (newDistance < minDistance)
+            {
+                seedIndex = i;
+                //edge = abs(minDistance - newDistance) < 0.002;
+                minDistance = distanceFunction(uv, seedUV);
+            }
+        }
+        //vec3 color = edge ? vec3(1.0) : minDistance < 0.002 ? vec3(1.0) : u_seedsColor[seedIndex];
+        vec3 color = minDistance < 0.002 ? vec3(1.0) : u_seedsColor[seedIndex];
+        outColor = vec4(color, 1.0);
 	}
 )glsl";
 
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
+
+inline float frand(int lo, int hi)
+{
+    return lo + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(hi-lo)));
 }
 
 GLFWwindow *InitGUI()
@@ -196,15 +239,34 @@ int main(int, char**)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(planeIndices), planeIndices, GL_STATIC_DRAW);
 
     // Uniforms
-    GLint screenSizeUniform = glGetUniformLocation(program, "u_resolution");
-    //GLint seedCountUniform = glGetUniformLocation(program, "seedCount");
-    //GLint seedsPositionUniform = glGetUniformLocation(program, "seedsPosition");
-    //GLint seedsColorUniform = glGetUniformLocation(program, "seedsColor");
+    GLint distanceFunctionUniform = glGetUniformLocation(program, "u_distanceFunction");
+    GLint seedCountUniform = glGetUniformLocation(program, "u_seedCount");
+    GLint seedsPositionUniform = glGetUniformLocation(program, "u_seedsPosition");
+    GLint seedsColorUniform = glGetUniformLocation(program, "u_seedsColor");
     // ----- plane created -----
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    int num_seeds = 0;
+    int num_seeds = MAX_SEED_COUNT;
+
+    int distanceFunctionChoice = 0;
+
+    float seeds_position[MAX_SEED_COUNT * 2];
+    float seeds_color[MAX_SEED_COUNT * 3];
+
+    // Generate seeds
+    std::cout << "Generating seeds..." << std::endl;
+    for (int i = 0; i < MAX_SEED_COUNT; i++)
+    {
+        seeds_position[i * 2] = frand(0, 1);
+        seeds_position[i * 2 + 1] = frand(0, 1);
+        //std::cout << "[" << i << "] " << seeds_position[i * 2] << " " << seeds_position[i * 2 + 1] << std::endl;
+
+        seeds_color[i * 3] = frand(0, 1);
+        seeds_color[i * 3 + 1] = frand(0, 1);
+        seeds_color[i * 3 + 2] = frand(0, 1);
+        //std::cout << "[" << i << "] " << seeds_color[i * 3] << " " << seeds_color[i * 3 + 1] << " " << seeds_color[i * 3 + 2] << std::endl;
+    }
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -218,6 +280,21 @@ int main(int, char**)
 
         {
             // IMGUI WINDOW HERE
+            ImGui::Begin("Voronoi");
+            ImGui::SliderInt("Distance function", &distanceFunctionChoice, 0, 3);
+            if(ImGui::Button("Randomize Seeds"))
+            {
+                for (int i = 0; i < MAX_SEED_COUNT; i++)
+                {
+                    seeds_position[i * 2] = frand(0, 1);
+                    seeds_position[i * 2 + 1] = frand(0, 1);
+
+                    seeds_color[i * 3] = frand(0, 1);
+                    seeds_color[i * 3 + 1] = frand(0, 1);
+                    seeds_color[i * 3 + 2] = frand(0, 1);
+                }
+            }
+            ImGui::End();
         }
 
 
@@ -233,7 +310,10 @@ int main(int, char**)
 
         // Draw
         glBindVertexArray(planeVAO);
-        glUniform2f(screenSizeUniform, display_w, display_h);
+        glUniform1i(distanceFunctionUniform, distanceFunctionChoice);
+        glUniform1i(seedCountUniform, num_seeds);
+        glUniform2fv(seedsPositionUniform, num_seeds, seeds_position);
+        glUniform3fv(seedsColorUniform, num_seeds, seeds_color); 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // Show
